@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from celluloid import Camera
 import os
 
 from utils import (
@@ -9,6 +11,7 @@ from utils import (
     read_file_points,
     points_to_data
 )
+from andrew import convex_hull
 
 
 def main():
@@ -18,21 +21,28 @@ def main():
         command = menu()
 
         fig = plt.figure()
+        camera = Camera(fig)
         ax = fig.add_subplot()
 
-        match command:
-            case '1':
-                number_of_points = int(input('Введите количество точек: '))
-                points = generate_random_points(number_of_points)
-                ax.scatter(*points_to_data(points), color='blue')
-                plt.show()
-                os.system('clear')
-            case '2':
-                read_file_points()
-                os.system('clear')
-            case _:
-                'Тут'
-                break
+        if command == '1':
+            number_of_points = int(input('Введите количество точек: '))
+            points = generate_random_points(number_of_points)
+            convex_hull(points, ax, camera)
+            ax.scatter(*points_to_data(points), color='blue')
+            animation = camera.animate()
+            animation.save('anim.gif')
+            plt.show()
+            os.system('clear')
+        if command == '2':
+            points = read_file_points()
+            convex_hull(points, ax, camera)
+            ax.scatter(*points_to_data(points), color='blue')
+            animation = camera.animate()
+            animation.save('anim.gif')
+            plt.show()
+            os.system('clear')
+        else:
+            break
 
 
 if __name__ == '__main__':

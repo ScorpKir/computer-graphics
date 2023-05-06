@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 def menu():
@@ -39,7 +40,7 @@ def generate_random_points(number_of_points: int) -> list[tuple[int]]:
 
 
 def read_file_points():
-    print('Тут должно быть чтение точек из файла\n')
+    return list(map(lambda item: tuple(item), np.loadtxt('points.txt').tolist()))
 
 
 def points_to_data(points: list[tuple[int]]) -> tuple[list[int]]:
