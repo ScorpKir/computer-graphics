@@ -1,0 +1,3 @@
+/home/scorpkir/code/graphics/task-one/build/CMakeFiles/task_one.dir
+/home/scorpkir/code/graphics/task-one/build/CMakeFiles/edit_cache.dir
+/home/scorpkir/code/graphics/task-one/build/CMakeFiles/rebuild_cache.dir
