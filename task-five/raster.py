@@ -25,7 +25,7 @@ def get_line_pixels(x1=0, y1=0, x2=0, y2=0):
 
     x, y = x1, y1
     error, t = el/2, 0
-    pixels = np.array([x, y, 1])
+    pixels = [[x, y, 1]]
     while t < el:
         error -= es
         if error < 0:
@@ -36,7 +36,7 @@ def get_line_pixels(x1=0, y1=0, x2=0, y2=0):
             x += pdx
             y += pdy
         t += 1
-        pixels = np.vstack([pixels, np.array([x, y, 1])])
+        pixels.append([x, y, 1])
     return pixels
 
 

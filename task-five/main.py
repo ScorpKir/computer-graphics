@@ -34,8 +34,6 @@ def main():
 
     # Находим границы поля
     xmax, ymax = map(max, points_to_data(pixels))
-    ax.set_xlim((xmin, xmax))
-    ax.set_ylim((ymin, ymax))
 
     # Построим поле
     field = np.zeros((xmax + 1, ymax + 1))
@@ -43,7 +41,7 @@ def main():
     # Строим изначально заданную фигуру
     for pixel in pixels:
         field[pixel[0], pixel[1]] = 1
-    draw_field(field, ax, bias=bias, color='black')
+    draw_field(field, ax, bias=bias)
     cam.snap()
 
     # Откидываем горизонтальные прямые
@@ -52,83 +50,51 @@ def main():
             x0, x1 = sorted([POLY[idx][0] + 1, POLY[(idx + 1) % SIZE][0]])
             for i in range(x0, x1):
                 field[i][POLY[idx][1]] = 0
-    draw_field(field, ax, bias=bias, color='black')
+    draw_field(field, ax, bias=bias)
     cam.snap()
     
-    # Откидываем верхушечки
-    for idx in range(SIZE):
-        left_diff = POLY[idx][1] - POLY[idx - 1][1]
-        right_diff = POLY[idx][1] - POLY[(idx + 1) % SIZE][1]
-        if left_diff * right_diff > 0:
-            field[POLY[idx][0]][POLY[idx][1]] = 0
-    draw_field(field, ax, bias=bias, color='black')
+    # Откидываем уголки
+    pixels_count = len(pixels)
+    for i in range(pixels_count):    
+        i_1, i_2, i_3 = (i + 1) % pixels_count, (i + 2) % pixels_count, (i + 3) % pixels_count
+        dy_base = pixels[i_1][1] - pixels[i][1]
+        dy_1 = pixels[i_2][1] - pixels[i_1][1]
+        dy_2 = pixels[i_3][1] - pixels[i_2][1]
+        if dy_2 * dy_1 < 0:
+            field[pixels[i_2][0], pixels[i_2][1]] = 0
+        elif dy_2 * dy_1 == 0 and dy_2 * dy_base <= 0:
+            field[pixels[i_2][0], pixels[i_2][1]] = 0
+        else:
+            field[pixels[i_2][0], pixels[i_2][1]] = 1
     cam.snap()
-    
-    # Откидываем прочие неприятности
-    for i in range(xmax):
-        for j in range(ymax):
-            # Верхушки
-            if i == 0 and j != 0:
-                if field[i][j] and not field[i + 1][j] and field[i + 1][j - 1] and field[i][j - 1]:
-                    field[i][j] = 0
-            if i == xmax - 1 and j != 0:
-                if field[i][j] and not field[i - 1][j] and field[i - 1][j - 1] and field[i][j - 1]:
-                    field[i][j] = 0
-            if i != xmax -1 and i != 0 and j != 0:
-                if field[i][j] and not field[i + 1][j] and field[i + 1][j - 1] and field[i][j - 1]:
-                    field[i][j] = 0
-                if field[i][j] and not field[i - 1][j] and field[i - 1][j - 1] and field[i][j - 1]:
-                    field[i][j] = 0
-                if field[i][j] and not field[i -1][j] and not field[i + 1][j] and field[i - 1][j - 1] and field[i + 1][j - 1]:
-                    field[i][j] = 0
-
-            
-            # Углубления
-            if i == 0 and j != ymax - 1:
-                if field[i][j] and not field[i + 1][j] and field[i + 1][j + 1] and field[i][j + 1]:
-                    field[i][j] = 0
-            if i == xmax - 1 and j != ymax - 1:
-                if field[i][j] and not field[i - 1][j] and field[i - 1][j + 1] and field[i][j + 1]:
-                    field[i][j] = 0
-            if i != xmax -1 and i != 0 and j != ymax - 1:
-                if field[i][j] and not field[i + 1][j] and field[i + 1][j + 1] and field[i][j + 1]:
-                    field[i][j] = 0
-                if field[i][j] and not field[i - 1][j] and field[i - 1][j + 1] and field[i][j + 1]:
-                    field[i][j] = 0
-                if field[i][j] and not field[i -1][j] and not field[i + 1][j] and field[i - 1][j + 1] and field[i + 1][j + 1]:
-                    field[i][j] = 0
-                if i > 1 and not field[i][j + 1] and field[i][j] and field[i][j - 1] and not field[i - 1][j - 1] and field[i - 2][j - 1]:
-                    field[i][j] = 0
-
-            # Горизонтали
-            if i != xmax - 1:
-                if field[i][j] and field[i + 1][j]:
-                    field[i][j] = 0 
-                                     
-    draw_field(field, ax, bias=bias, color='black')
-    cam.snap()
-                        
+                     
     # Выполняем алгоритм
     # Попутно выполняя анимацию отрисовки
     # ориентируясь на смещение которое делалось вначале
     for y in range(ymax + 1):
         fill = False
         for x in range(xmax):
-            if field[x, y] and not field[x + 1, y]:
+            if field[x, y]:
                 fill = not fill
             if fill:
                 field[x, y] = 1
-                draw_field(field, ax, bias=bias, color='black')
+                draw_field(field, ax, bias=bias)
                 cam.snap()
     
-    # Рисуем границу обратно            
-    for pixel in pixels:
-        field[pixel[0]][pixel[1]] = 1
-    draw_field(field, ax, bias=bias, color='black')
+    
+    # Добавляем несколько кадров результата
+    for item in pixels:
+        field[item[0], item[1]] = 1
+        
+    draw_field(field, ax, bias=bias)
+    cam.snap()
+    draw_field(field, ax, bias=bias)
+    cam.snap()
+    draw_field(field, ax, bias=bias)
     cam.snap()
     
     # Отображаем анимацию
-    anim = cam.animate()
+    anim = cam.animate(interval=300)
     anim.save('example.gif')
     plt.show()
 

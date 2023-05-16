@@ -6,7 +6,6 @@ import os
 
 from utils import (
     menu,
-    wait_key,
     generate_random_points,
     read_file_points,
     points_to_data
@@ -37,7 +36,7 @@ def main():
             points = read_file_points()
             convex_hull(points, ax, camera)
             ax.scatter(*points_to_data(points), color='blue')
-            animation = camera.animate()
+            animation = camera.animate(interval=150)
             animation.save('anim.gif')
             plt.show()
             os.system('clear')
