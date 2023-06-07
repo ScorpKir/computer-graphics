@@ -6,8 +6,58 @@ from transform import (
     move_to_origin
 )
 
+def get_line_pixels(start, end):
 
-def get_line_pixels(x1=0, y1=0, x2=0, y2=0):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+
+        val = []
+        
+        sign_x = 1 if dx > 0 else -1  if dx < 0 else 0
+        sign_y = 1 if dy > 0 else -1  if dy < 0 else 0
+
+
+        if dx < 0:
+            dx = -dx
+        if dy < 0:
+            dy = -dy
+
+        if dx > dy:
+            pdx, pdy = sign_x, 0
+            es, el = dy, dx
+        else:
+            pdx, pdy = 0, sign_y
+            es, el = dx, dy
+
+        x, y = start[0], start[1]
+
+        error, t = el / 2, 0
+
+        flag = y
+        ##self.base.grid.paint2(x, y)
+
+
+        while t < el:
+            error -= es
+            if error < 0:
+                if not pdy and y != flag:
+                    val.append([x, y])
+                error += el
+                x += sign_x
+                y += sign_y
+                if pdy:
+                    val.append([x, y])
+            else:
+                x += pdx
+                y += pdy
+                if pdy:
+                    val.append([x, y])
+
+            t += 1
+
+        return val
+
+                
+def line_pixels(x1=0, y1=0, x2=0, y2=0):
     dx = x2 - x1
     dy = y2 - y1
     sign_x = 1 if dx > 0 else -1 if dx < 0 else 0
@@ -59,7 +109,7 @@ def process_line(line):
     if line[1][1] > line[1][0]:
         lineXYReversed = True
         line = reverse_xy(line)
-    pixels = get_line_pixels(*line[0][:-1], *line[1][:-1])
+    pixels = line_pixels(*line[0][:-1], *line[1][:-1])
     if lineXYReversed:
         pixels = reverse_xy(pixels)
     if lineYReversed:

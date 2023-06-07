@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from matplotlib import pyplot
 import numpy
 from celluloid import Camera

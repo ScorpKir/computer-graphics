@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
 from celluloid import Camera
 import numpy as np
 
-from raster import process_line
+from raster import get_line_pixels, process_line
 from utils import points_to_data, draw_field
 
 
@@ -27,13 +28,19 @@ def main():
     for idx in range(SIZE):
         POLY[idx][0] -= bias[0]
         POLY[idx][1] -= bias[1]
-
+    
+    # Получаем границу рисунка
+    border_pixels = new_pixels = np.vstack([process_line([POLY[idx], POLY[(idx + 1) % SIZE]])
+                            for idx in range(SIZE)])
+    
     # Начинаем с растеризациии границ
-    pixels = np.vstack([process_line([POLY[idx], POLY[(idx + 1) % SIZE]])
-                        for idx in range(SIZE)])
-
+    pixels = np.vstack([get_line_pixels(POLY[idx], POLY[(idx + 1) % SIZE])
+                        for idx in range(SIZE) if len(get_line_pixels(POLY[idx], POLY[(idx + 1) % SIZE])) != 0])
+    
     # Находим границы поля
-    xmax, ymax = map(max, points_to_data(pixels))
+    xmax, ymax = map(max, points_to_data(border_pixels))
+    xmax += 1
+    ymax += 1
 
     # Построим поле
     field = np.zeros((xmax + 1, ymax + 1))
@@ -41,18 +48,9 @@ def main():
     # Строим изначально заданную фигуру
     for pixel in pixels:
         field[pixel[0], pixel[1]] = 1
-    draw_field(field, ax, bias=bias)
+    draw_field(field, ax)
     cam.snap()
 
-    # Откидываем горизонтальные прямые
-    for idx in range(SIZE):
-        if POLY[idx][1] == POLY[(idx + 1) % SIZE][1]:
-            x0, x1 = sorted([POLY[idx][0] + 1, POLY[(idx + 1) % SIZE][0]])
-            for i in range(x0, x1):
-                field[i][POLY[idx][1]] = 0
-    draw_field(field, ax, bias=bias)
-    cam.snap()
-    
     # Откидываем уголки
     pixels_count = len(pixels)
     for i in range(pixels_count):    
@@ -61,12 +59,17 @@ def main():
         dy_1 = pixels[i_2][1] - pixels[i_1][1]
         dy_2 = pixels[i_3][1] - pixels[i_2][1]
         if dy_2 * dy_1 < 0:
-            field[pixels[i_2][0], pixels[i_2][1]] = 0
+           field[pixels[i_2][0], pixels[i_2][1]] = 0
+           draw_field(field, ax)
+           cam.snap()
         elif dy_2 * dy_1 == 0 and dy_2 * dy_base <= 0:
             field[pixels[i_2][0], pixels[i_2][1]] = 0
+            draw_field(field, ax)
+            cam.snap()
         else:
             field[pixels[i_2][0], pixels[i_2][1]] = 1
-    cam.snap()
+            draw_field(field, ax)
+            cam.snap()
                      
     # Выполняем алгоритм
     # Попутно выполняя анимацию отрисовки
@@ -78,19 +81,27 @@ def main():
                 fill = not fill
             if fill:
                 field[x, y] = 1
-                draw_field(field, ax, bias=bias)
+                draw_field(field, ax)
                 cam.snap()
     
+    #new_pixels = np.vstack([process_line([POLY[idx], POLY[(idx + 1) % SIZE]])
+    #                        for idx in range(SIZE)])
     
+    #for pixel in border_pixels:
+    #    field[pixel[0]][pixel[1]] = 1
+       
     # Добавляем несколько кадров результата
-    for item in pixels:
-        field[item[0], item[1]] = 1
+    #for item in pixels:
+    #    field[item[0], item[1]] = 1
         
-    draw_field(field, ax, bias=bias)
+    ax.add_patch(Polygon(POLY[:, :2], fc='none', ec='black'))
+    draw_field(field, ax)
     cam.snap()
-    draw_field(field, ax, bias=bias)
+    draw_field(field, ax)
+    ax.add_patch(Polygon(POLY[:, :2], fc='none', ec='black'))
     cam.snap()
-    draw_field(field, ax, bias=bias)
+    draw_field(field, ax)
+    ax.add_patch(Polygon(POLY[:, :2], fc='none', ec='black'))
     cam.snap()
     
     # Отображаем анимацию
